@@ -8,12 +8,14 @@ Requires Gempyre-Python to be installed
 
 * scale s - scales drawing
 
-* ln x1 y1 x2 y2 - draw a line
+* line x1 y1 x2 y2 - draw a line
+
+* ln x y  - draw a jointed line from a previous line position
 
 e.g.
 
 ```bash
 
-$ ./pen.py off 1000 0 ln 1322 12 1350 100
+$ pen.py off 1000 0 line 1322 12 1350 100 ln 1200 200
 
 ```

@@ -29,18 +29,17 @@ def command(ui, args):
                 offx = float(next(it))
                 offy = float(next(it))
             elif(cmd == 'scale'):
-                scale = float(next(it))    
-            elif(cmd == 'ln'):
-                fc.begin_path()
+                scale = float(next(it))
+            elif(cmd == 'line'):
                 fc.move_to(posx(next(it)), posy(next(it)))
                 fc.line_to(posx(next(it)), posy(next(it)))
-                fc.close_path()
-                fc.stroke()
+            elif(cmd == 'ln'):
+                fc.line_to(posx(next(it)), posy(next(it)))
             else:
                 print("Not get: ", cmd, file=std.err)
     except (StopIteration):
         pass
-    
+    fc.stroke()        
     canvas.draw_frame(fc)    
 
 
