@@ -12,7 +12,11 @@ Requires Gempyre-Python to be installed.
 
 * ln x y  - draw a jointed line from a previous line position.
 
+* move x y - move a line start position
+
 * color c - use a given color (HTML color name or format).
+
+* close -  close current line to a polygon
 
 e.g.
 
@@ -22,7 +26,15 @@ $ pen.py off 1000 0 line 1322 12 1350 100 ln 1200 200
 
 ```
 
-or
+is pretty equal with 
+
+```bash
+
+$ pen.py off 1000 0 move 1322 12 ln 1350 100 ln 1200 200
+
+```
+
+Read from file:
 
 ```bash
 
@@ -30,4 +42,3 @@ $ pen.py < lines.txt
 
 ```
 
-where 'lines'.txt contains draw commands
