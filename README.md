@@ -16,7 +16,7 @@ Requires Gempyre-Python to be installed.
 * ln x y  - draw a joint line from a previous line position.
 
 * move x y - move a line start position. I.e. 'line x1 y1 x2 y2' and 'move x1 y1 ln x2 y2' are equal expressions.  
-* 
+  
 * color c - use a given color (HTML color name or HTML color format).
 
 * close -  close current line to form a polygon
