@@ -1,0 +1,32 @@
+off 2000 -4200
+scale 1
+
+color green
+move 2048 -3904
+ln 2048 -3920
+ln 2176 -3920
+close
+
+color red
+move 2048 -3920
+ln 2112 -4032
+ln 2176 -3920
+close
+
+color blue
+move 2176 -3904
+ln 2048 -3904
+ln 2176 -3920
+close
+
+color cyan
+move 2112 -4032
+ln 2240 -3968
+ln 2176 -3920
+close
+
+color orange
+move 2112 -4032
+ln 2240 -4096
+ln 2240 -3968
+close

@@ -1,6 +1,11 @@
 # pen
 
-Draw lines from command line.
+Draw simple from command line or from file.
+
+This application has been implemented to help generate visualization from debug
+printouts. Sometimes there are just too much information to see what numbers mean, and
+then visualization may help to see the big picture.
+
 
 Requires Gempyre-Python to be installed.
 
@@ -16,7 +21,9 @@ Requires Gempyre-Python to be installed.
 
 * color c - use a given color (HTML color name or format).
 
-* close -  close current line to a polygon
+* close -  close current line to a polygon.
+
+* circle r x y - draw a circle.
 
 e.g.
 
