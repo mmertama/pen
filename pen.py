@@ -2,6 +2,7 @@
 import Gempyre
 import os
 import sys
+import math
 from Gempyre_utils import resource
 
 
@@ -36,7 +37,7 @@ def command(ui, args):
 
     try:
         while it:
-            cmd = next(it)
+            cmd = next(it) # change to match - case when applicable
             if cmd == 'color':
                 end_path()
                 fc.stroke_style(next(it))
@@ -50,15 +51,20 @@ def command(ui, args):
                 fc.move_to(posx(next(it)), posy(next(it)))    
             elif cmd == 'line':
                 begin_path()
-                fc.begin_path    
                 fc.move_to(posx(next(it)), posy(next(it)))
                 fc.line_to(posx(next(it)), posy(next(it)))
+            elif cmd == 'circle':
+                begin_path()
+                radius = float(next(it))
+                fc.ellipse(posx(next(it)), posy(next(it)), radius, radius, math.pi * 2, 0, math.pi * 2)  
             elif cmd == 'close':
                 if in_line:
                     fc.close_path()
                 end_path()
             elif cmd == 'ln':
                 fc.line_to(posx(next(it)), posy(next(it)))
+            elif cmd[0] == '#': # comment
+                continue   
             elif cmd.isprintable() and cmd != ' ':
                 print("Not understood: '", cmd, "'", file=sys.stderr)
     except (StopIteration):

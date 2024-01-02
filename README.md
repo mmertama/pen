@@ -1,9 +1,12 @@
 # pen
 
-Sometime ago I had need to visualize things (write lines) from Bash script, for that
-I wrote this small application.  
+Draw simple from command line or from file.
 
-Draw lines from command line.
+This application has been implemented to help generate visualization from debug
+printouts. Sometimes there are just too much information to see what numbers mean, and
+then visualization may help to see the big picture.
+
+
 
 Requires Gempyre-Python to be installed.
 
@@ -19,7 +22,12 @@ Requires Gempyre-Python to be installed.
   
 * color c - use a given color (HTML color name or HTML color format).
 
-* close -  close current line to form a polygon
+
+* color c - use a given color (HTML color name or format).
+
+* close -  close current line to a polygon.
+
+* circle r x y - draw a circle.
 
 e.g.
 

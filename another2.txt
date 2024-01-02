@@ -1,0 +1,33 @@
+off 1700 2200
+color green
+circle 5 1920 2309
+move 1992 2312 ln 1784 2312 ln 1984 2304 close
+color cyan
+circle 5 1856 2261
+move 1792 2304 ln 1792 2240 ln 1984 2240 close
+color green
+circle 5 1853 2237
+move 1792 2240 ln 1784 2232 ln 1984 2240 close
+color green
+circle 5 1989 2282
+move 1984 2304 ln 1992 2232 ln 1992 2312 close
+color green
+circle 5 1853 2306
+move 1784 2312 ln 1792 2304 ln 1984 2304 close
+color cyan
+circle 5 1920 2282
+move 1792 2304 ln 1984 2240 ln 1984 2304 close
+color green
+circle 5 1789 2285
+move 1792 2240 ln 1792 2304 ln 1784 2312 close
+color green
+circle 5 1786 2261
+move 1784 2232 ln 1792 2240 ln 1784 2312 close
+color green
+circle 5 1986 2258
+move 1984 2240 ln 1992 2232 ln 1984 2304 close
+color green
+circle 5 1920 2234
+move 1984 2240 ln 1784 2232 ln 1992 2232 close
+color red
+move 1992 2312 ln 1992 2312 ln 1992 2232 ln 1784 2232 ln 1784 2312 ln 1992 2312
