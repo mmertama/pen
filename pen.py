@@ -3,14 +3,15 @@ import Gempyre
 import os
 import sys
 import math
-from Gempyre_utils import resource
-
+from Gempyre import resource
 
 def command(ui, args):
     canvas = Gempyre.CanvasElement(ui, "canvas")
 
     fc = Gempyre.FrameComposer()
     it = iter(args)
+
+    text_style = 'fill'
 
     offy = 0.
     offx = 0.
@@ -28,6 +29,23 @@ def command(ui, args):
         if in_line:
             fc.stroke()
             in_line = False
+
+    def read_text():
+        nonlocal it
+        text = next(it)
+        if text[0] == '"':
+            start = '"' 
+        elif text[0] == "'":
+            start = "'"
+        else:
+            raise Exception('Not a string:' + text)
+        text = text[1:]
+       
+        while not (text[-1] == start and (len(text) == 1 or text[-2] != '\\')): 
+            text += ' ' + next(it)
+
+        text = str(text[:-1])
+        return text            
 
     def begin_path():
         nonlocal in_line
@@ -63,6 +81,17 @@ def command(ui, args):
                 end_path()
             elif cmd == 'ln':
                 fc.line_to(posx(next(it)), posy(next(it)))
+            elif cmd == 'text':
+                if text_style == 'fill':
+                    fc.fill_text(read_text(), posx(next(it)), posy(next(it)))   
+                elif text_style == 'stroke':
+                    fc.stroke_text(read_text(), posx(next(it)), posy(next(it)))
+            elif cmd == 'font':
+                fc.font(next(it))
+            elif cmd == 'text_align':
+                fc.text_align(next(it))
+            elif cmd == 'text_baseline':
+                fc.text_baseline(next(it))             
             elif cmd[0] == '#': # comment
                 continue   
             elif cmd.isprintable() and cmd != ' ':
