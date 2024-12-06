@@ -3,26 +3,72 @@ import Gempyre
 import os
 import sys
 import math
+import datetime
 from Gempyre import resource
 
-def command(ui, args):
-    canvas = Gempyre.CanvasElement(ui, "canvas")
+GUI = '''
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Pen</title>
+        <style>
+        body { 
+            display: flex; 
+            justify-content: center; /* Center horizontally */ 
+            align-items: center; /* Center vertically */ 
+            height: 100vh; /* Make the body full height */ 
+            margin: 0; /* Remove default margin */ 
+        }
+        </style>
+    </head>
+    <body>
+        <script type="text/javascript" src="gempyre.js"></script>
+        <canvas id="canvas" width="1280" height="1024"></canvas>
+    </body>
+</html>
+'''
+
+
+MAX = float(0xFFFFFF)
+
+offy = 0.
+offx = 0.
+scale = 1.
+
+def command(ui, args, enable_auto = True):
 
     fc = Gempyre.FrameComposer()
     it = iter(args)
 
     text_style = 'fill'
-
-    offy = 0.
-    offx = 0.
-    scale = 1.
+   
     in_line = False
+    auto_offset = False
+    auto_scale = False
+
+    minx = MAX
+    maxx = -MAX
+    miny = MAX
+    maxy = -MAX
+
+    global offy, offx, scale
 
     def posx(x):
-        return (float(x) - offx) * scale
+        global offx, scale
+        nonlocal minx, maxx
+        v = float(x)
+        minx = min(minx, v)
+        maxx = max(maxx, v)
+        return (v - offx) * scale
 
     def posy(y):
-        return (float(y) - offy) * scale    
+        global offy, scale
+        nonlocal miny, maxy
+        v = float(y)
+        miny = min(miny, v)
+        maxy = max(maxy, v)
+        return (v - offy) * scale    
 
     def end_path():
         nonlocal in_line
@@ -60,10 +106,18 @@ def command(ui, args):
                 end_path()
                 fc.stroke_style(next(it))
             elif cmd == 'off':
-                offx = float(next(it))
-                offy = float(next(it))
+                param = next(it)
+                if param == 'auto':
+                    auto_offset = enable_auto
+                else: 
+                    offx = float(param)
+                    offy = float(next(it))
             elif cmd == 'scale':
-                scale = float(next(it))
+                param = next(it)
+                if param == 'auto':
+                    auto_scale = enable_auto
+                else:  
+                    scale = float(param)
             elif cmd == 'move':
                 begin_path()
                 fc.move_to(posx(next(it)), posy(next(it)))    
@@ -92,24 +146,51 @@ def command(ui, args):
                 fc.text_align(next(it))
             elif cmd == 'text_baseline':
                 fc.text_baseline(next(it))             
-            elif cmd[0] == '#': # comment
-                continue   
             elif cmd.isprintable() and cmd != ' ':
                 print("Not understood: '", cmd, "'", file=sys.stderr)
     except (StopIteration):
         pass
     end_path()
-    #print(fc.composed())        
-    canvas.draw_frame(fc)    
+
+    
+    if not (auto_scale and auto_offset):
+        print("scale", scale, "offset", offx, offy)           
+        Gempyre.CanvasElement(ui, "canvas").draw_frame(fc)
+    else:
+        rect = Gempyre.CanvasElement(ui, "canvas").rect()
+        width = maxx - minx
+        height = maxy - miny
+        assert width > 0
+        assert height > 0
+        if width == 0 or height == 0:
+            return
+        if auto_scale:
+            scale = min(rect.width / width, rect.height / height)     
+        if auto_offset:
+            offx = ((rect.width ) - width * scale) / 2. + minx
+            offy = ((rect.height - 30) - height * scale) / 2. + miny
+        print("scale", scale, "offset", offx, offy, "s", width, height, "r", rect.width, rect.height, "m", minx, miny, maxx, maxy)    
+        command(ui, args, False)                
 
 
 if __name__ == "__main__":
-    name = os.path.join(os.path.dirname(sys.argv[0]), "ui", "ui.html")
-    map, names = resource.from_file(name)
-    ui = Gempyre.Ui(map, names[name])
+    map, names = resource.from_bytes({"ui.html": bytes(GUI, 'utf-8')})
+    ui = Gempyre.Ui(map, names["ui.html"])
     # read from arguments or stdin - stdin is tokenized.
-    params = sys.argv[1:] if len(sys.argv) > 1 else ' '.join(sys.stdin.readlines()).replace('\n', '').rstrip().split()
+    params = sys.argv[1:] if len(sys.argv) > 1 else ' '.join((ln for ln in sys.stdin.readlines() if ln[0] != '#')).replace('\n', '').rstrip().split()
     
-    ui.on_open(lambda: command(ui, params))
+    def on_resize():
+        wrect = ui.root().rect()
+        Gempyre.Element(ui, "canvas").set_attribute("width", str(wrect.width - 30))
+        Gempyre.Element(ui, "canvas").set_attribute("height", str(wrect.height - 30))
+        command(ui, params)
+
+    ui.root().subscribe("resize", lambda _: on_resize, [], datetime.timedelta(milliseconds=500))
+
+    def on_open():
+        on_resize()
+        command(ui, params)
+
+    ui.on_open(on_open)    
 
     ui.run()
