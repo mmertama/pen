@@ -10,9 +10,13 @@ then visualization may help to see the big picture.
 
 Requires Gempyre-Python to be installed.
 
-* off x y - set offset of following coordinates. Default is (0,0) helps you centrify/move drawing. 
+* off 
+    * x y - set offset of following coordinates. Default is (0,0) helps you center/move drawing. 
+    * auto - automatically centers graphics.
   
-* scale s - scales drawing with a given factor. Default is 1.0.
+* scale 
+    * s - scales drawing with a given factor. Default is 1.0.
+    * auto - scales drawing automatically.
 
 * line x1 y1 x2 y2 - draw a line.
 
@@ -22,12 +26,21 @@ Requires Gempyre-Python to be installed.
   
 * color c - use a given color (HTML color name or HTML color format).
 
-
 * color c - use a given color (HTML color name or format).
 
 * close -  close current line to a polygon.
 
 * circle r x y - draw a circle.
+
+* text "some text" x y - Double or quote text is written on position x y
+
+* text_style
+    * fill - text is filled (default)
+    * stroke - text is stoked
+
+* font font_name - apply a given font name
+* text_align - see: [align at w3schools](https://www.w3schools.com/graphics/canvas_text_alignment.asp#:~:text=To%20align%20text%20in%20the,the%20horizontal%20alignment%20of%20text)
+* text_baseline - see: [baseline at w3schools](https://www.w3schools.com/tags/canvas_textbaseline.asp)
 
 e.g.
 

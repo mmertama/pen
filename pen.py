@@ -146,6 +146,8 @@ def command(ui, args, enable_auto = True):
                 fc.text_align(next(it))
             elif cmd == 'text_baseline':
                 fc.text_baseline(next(it))             
+            elif cmd == 'text_style':
+                text_style = next(it)    
             elif cmd.isprintable() and cmd != ' ':
                 print("Not understood: '", cmd, "'", file=sys.stderr)
     except (StopIteration):
