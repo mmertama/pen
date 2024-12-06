@@ -169,9 +169,9 @@ def command(ui, args, enable_auto = True):
         if auto_scale:
             scale = min(rect.width / width, rect.height / height)     
         if auto_offset:
-            offx = ((rect.width ) - width * scale) / 2. + minx
+            offx = (rect.width - width * scale) / 2. + minx
             offy = ((rect.height - 30) - height * scale) / 2. + miny
-        print("scale", scale, "offset", offx, offy, "s", width, height, "r", rect.width, rect.height, "m", minx, miny, maxx, maxy)    
+        #print("scale", scale, "offset", offx, offy, "s", width, height, "r", rect.width, rect.height, "m", minx, miny, maxx, maxy)    
         command(ui, args, False)                
 
 

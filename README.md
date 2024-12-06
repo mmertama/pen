@@ -27,8 +27,6 @@ Requires Gempyre-Python to be installed. (e.g. pip install gempyre)
   
 * color c - use a given color (HTML color name or HTML color format).
 
-* color c - use a given color (HTML color name or format).
-
 * close -  close current line to a polygon.
 
 * circle r x y - draw a circle.
