@@ -7,8 +7,9 @@ printouts. Sometimes there are just too much information to see what numbers mea
 then visualization may help to see the big picture.
 
 
+Requires Gempyre-Python to be installed. (e.g. pip install gempyre) 
 
-Requires Gempyre-Python to be installed.
+## Commands
 
 * off 
     * x y - set offset of following coordinates. Default is (0,0) helps you center/move drawing. 
@@ -58,6 +59,18 @@ $ pen.py off 1000 0 move 1322 12 ln 1350 100 ln 1200 200
 
 ```
 
+Example file
+
+```
+scale auto
+off auto
+text_align center
+text_baseline middle
+
+text "Hello world!" 1544 2560
+line 1552 2560 1536 2560
+```
+
 Read from file:
 
 ```bash
@@ -65,4 +78,13 @@ Read from file:
 $ pen.py < lines.txt
 
 ```
+
+... or with poetry:
+
+```bash
+
+$ poetry run python3 ../pen.py < ~/lines/nav_line16.txt
+
+```
+
 
