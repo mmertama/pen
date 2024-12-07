@@ -31,6 +31,7 @@ GUI = '''
 
 
 MAX = float(0xFFFFFF)
+GUI_MARGIN = 30
 
 offy = 0.
 offx = 0.
@@ -170,7 +171,7 @@ def command(ui, args, enable_auto = True):
             scale = min(rect.width / width, rect.height / height)     
         if auto_offset:
             offx = (rect.width - width * scale) / 2. + minx
-            offy = ((rect.height - 30) - height * scale) / 2. + miny
+            offy = ((rect.height - GUI_MARGIN) - height * scale) / 2. + miny
         #print("scale", scale, "offset", offx, offy, "s", width, height, "r", rect.width, rect.height, "m", minx, miny, maxx, maxy)    
         command(ui, args, False)                
 
@@ -183,8 +184,8 @@ if __name__ == "__main__":
     
     def on_resize():
         wrect = ui.root().rect()
-        Gempyre.Element(ui, "canvas").set_attribute("width", str(wrect.width - 30))
-        Gempyre.Element(ui, "canvas").set_attribute("height", str(wrect.height - 30))
+        Gempyre.Element(ui, "canvas").set_attribute("width", str(wrect.width - GUI_MARGIN))
+        Gempyre.Element(ui, "canvas").set_attribute("height", str(wrect.height - GUI_MARGIN))
         command(ui, params)
 
     ui.root().subscribe("resize", lambda _: on_resize, [], datetime.timedelta(milliseconds=500))
