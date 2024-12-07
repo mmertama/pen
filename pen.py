@@ -31,7 +31,7 @@ GUI = '''
 
 
 MAX = float(0xFFFFFF)
-GUI_MARGIN = 30
+GUI_MARGIN = 20
 
 offy = 0.
 offx = 0.
@@ -155,45 +155,65 @@ def command(ui, args, enable_auto = True):
         pass
     end_path()
 
-    
+    canvas = Gempyre.CanvasElement(ui, "canvas")
     if not (auto_scale and auto_offset):
-        print("scale", scale, "offset", offx, offy)           
-        Gempyre.CanvasElement(ui, "canvas").draw_frame(fc)
+       canvas.draw_frame(fc)
     else:
-        rect = Gempyre.CanvasElement(ui, "canvas").rect()
         width = maxx - minx
         height = maxy - miny
         assert width > 0
         assert height > 0
         if width == 0 or height == 0:
             return
-        if auto_scale:
+        rect = canvas.rect()
+        rect.width -= GUI_MARGIN
+        rect.height -= GUI_MARGIN
+        if auto_scale: # scale is from drawing coordinates to screen coords
             scale = min(rect.width / width, rect.height / height)     
-        if auto_offset:
-            offx = (rect.width - width * scale) / 2. + minx
-            offy = ((rect.height - GUI_MARGIN) - height * scale) / 2. + miny
-        #print("scale", scale, "offset", offx, offy, "s", width, height, "r", rect.width, rect.height, "m", minx, miny, maxx, maxy)    
+        if auto_offset: # offset is in drawing coordinates (not in canvas)
+            offx = minx + (width - rect.width / scale) / 2
+            offy = miny + (height - rect.height / scale) / 2
+            #assert offx == 0 and offy == 0
+            #offx = (rect.width / scale - width) / 2. + minx
+            #offy = (rect.height / scale- height) / 2. + miny
+        #print("scale", scale, "offset", offx, offy, "s", width, height, "r", rect.width, rect.height, "m", minx, miny, maxx, maxy)
+
+        print(f"Canvas Rect: width={rect.width}, height={rect.height}")
+        print(f"Drawing Bounds: minx={minx}, maxx={maxx}, miny={miny}, maxy={maxy}")
+        print(f"Computed Width: {width}, Height: {height}")
+        print(f"Scale: {scale}, Offsets: offx={offx}, offy={offy}")
+
+
         command(ui, args, False)                
 
 
 if __name__ == "__main__":
-    map, names = resource.from_bytes({"ui.html": bytes(GUI, 'utf-8')})
-    ui = Gempyre.Ui(map, names["ui.html"])
-    # read from arguments or stdin - stdin is tokenized.
-    params = sys.argv[1:] if len(sys.argv) > 1 else ' '.join((ln for ln in sys.stdin.readlines() if ln[0] != '#')).replace('\n', '').rstrip().split()
-    
-    def on_resize():
-        wrect = ui.root().rect()
-        Gempyre.Element(ui, "canvas").set_attribute("width", str(wrect.width - GUI_MARGIN))
-        Gempyre.Element(ui, "canvas").set_attribute("height", str(wrect.height - GUI_MARGIN))
-        command(ui, params)
+    def main():
+        map, names = resource.from_bytes({"ui.html": bytes(GUI, 'utf-8')})
+        ui = Gempyre.Ui(map, names["ui.html"])
+        # read from arguments or stdin - stdin is tokenized.
+        params = sys.argv[1:] if len(sys.argv) > 1 else ' '.join((ln for ln in sys.stdin.readlines() if ln[0] != '#')).replace('\n', '').rstrip().split()
 
-    ui.root().subscribe("resize", lambda _: on_resize, [], datetime.timedelta(milliseconds=500))
+        wrect = Gempyre.Rect(0, 0, 0 ,0)
+        
+        def on_resize():
+            nonlocal wrect
+            new_rect = ui.root().rect()
+            if new_rect != wrect:
+                wrect = new_rect
+                canvas = Gempyre.CanvasElement(ui, "canvas")
+                canvas.set_attribute("width", str(wrect.width - GUI_MARGIN))
+                canvas.set_attribute("height", str(wrect.height - GUI_MARGIN))
+                canvas.erase()
+                command(ui, params)
 
-    def on_open():
-        on_resize()
-        command(ui, params)
+        # works only with non-browser UI servers
+        ui.root().subscribe("resize", lambda _: on_resize(), [], datetime.timedelta(milliseconds=500))
 
-    ui.on_open(on_open)    
+        def on_open():
+            ui.after(datetime.timedelta(milliseconds=200), lambda: on_resize())
 
-    ui.run()
+        ui.on_open(on_open)
+
+        ui.run()
+    main()    
