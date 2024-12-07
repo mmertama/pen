@@ -173,17 +173,7 @@ def command(ui, args, enable_auto = True):
         if auto_offset: # offset is in drawing coordinates (not in canvas)
             offx = minx + (width - rect.width / scale) / 2
             offy = miny + (height - rect.height / scale) / 2
-            #assert offx == 0 and offy == 0
-            #offx = (rect.width / scale - width) / 2. + minx
-            #offy = (rect.height / scale- height) / 2. + miny
-        #print("scale", scale, "offset", offx, offy, "s", width, height, "r", rect.width, rect.height, "m", minx, miny, maxx, maxy)
-
-        print(f"Canvas Rect: width={rect.width}, height={rect.height}")
-        print(f"Drawing Bounds: minx={minx}, maxx={maxx}, miny={miny}, maxy={maxy}")
-        print(f"Computed Width: {width}, Height: {height}")
-        print(f"Scale: {scale}, Offsets: offx={offx}, offy={offy}")
-
-
+           
         command(ui, args, False)                
 
 
@@ -211,7 +201,7 @@ if __name__ == "__main__":
         ui.root().subscribe("resize", lambda _: on_resize(), [], datetime.timedelta(milliseconds=500))
 
         def on_open():
-            ui.after(datetime.timedelta(milliseconds=200), lambda: on_resize())
+            on_resize()
 
         ui.on_open(on_open)
 
