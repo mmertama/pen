@@ -55,6 +55,8 @@ def command(ui, args, enable_auto = True):
 
     global offy, offx, scale
 
+    is_fill = False
+
     def posx(x):
         global offx, scale
         nonlocal minx, maxx
@@ -73,8 +75,12 @@ def command(ui, args, enable_auto = True):
 
     def end_path():
         nonlocal in_line
+        nonlocal is_fill
         if in_line:
-            fc.stroke()
+            if is_fill:
+                fc.fill()
+            else:    
+                fc.stroke()
             in_line = False
 
     def read_text():
@@ -105,7 +111,12 @@ def command(ui, args, enable_auto = True):
             cmd = next(it) # change to match - case when applicable
             if cmd == 'color':
                 end_path()
+                is_fill = False
                 fc.stroke_style(next(it))
+            elif cmd == 'fill':
+                end_path()
+                is_fill = True
+                fc.fill_style(next(it))    
             elif cmd == 'off':
                 param = next(it)
                 if param == 'auto':
@@ -150,7 +161,7 @@ def command(ui, args, enable_auto = True):
             elif cmd == 'text_style':
                 text_style = next(it)    
             elif cmd.isprintable() and cmd != ' ':
-                print("Not understood: '", cmd, "'", file=sys.stderr)
+                print("Not understood: '" + cmd + "'", file=sys.stderr)
     except (StopIteration):
         pass
     end_path()
@@ -195,7 +206,7 @@ if __name__ == "__main__":
                 canvas.set_attribute("width", str(wrect.width - GUI_MARGIN))
                 canvas.set_attribute("height", str(wrect.height - GUI_MARGIN))
                 canvas.erase()
-                command(ui, params)
+                command(ui, ['scale', 'auto', 'off', 'auto'] + params)
 
         # works only with non-browser UI servers
         ui.root().subscribe("resize", lambda _: on_resize(), [], datetime.timedelta(milliseconds=500))
