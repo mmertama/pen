@@ -36,8 +36,10 @@ GUI_MARGIN = 20
 offy = 0.
 offx = 0.
 scale = 1.
+invx = False
+invy = True
 
-def command(ui, args, enable_auto = True):
+def command(ui, rect, args, enable_auto = True):
 
     fc = Gempyre.FrameComposer()
     it = iter(args)
@@ -58,20 +60,22 @@ def command(ui, args, enable_auto = True):
     is_fill = False
 
     def posx(x):
-        global offx, scale
+        global offx, scale, invx
         nonlocal minx, maxx
         v = float(x)
         minx = min(minx, v)
         maxx = max(maxx, v)
-        return (v - offx) * scale
+        screenx = (v - offx) * scale
+        return rect.width - screenx if invx else screenx  
 
     def posy(y):
-        global offy, scale
+        global offy, scale, invy
         nonlocal miny, maxy
         v = float(y)
         miny = min(miny, v)
         maxy = max(maxy, v)
-        return (v - offy) * scale    
+        screeny = (v - offy) * scale
+        return rect.height - screeny if invy else screeny      
 
     def end_path():
         nonlocal in_line
@@ -159,7 +163,11 @@ def command(ui, args, enable_auto = True):
             elif cmd == 'text_baseline':
                 fc.text_baseline(next(it))             
             elif cmd == 'text_style':
-                text_style = next(it)    
+                text_style = next(it) 
+            elif cmd == 'invx':
+                invx = next(it)
+            elif cmd == 'invy':
+                invy = next(it)
             elif cmd.isprintable() and cmd != ' ':
                 print("Not understood: '" + cmd + "'", file=sys.stderr)
     except (StopIteration):
@@ -184,8 +192,7 @@ def command(ui, args, enable_auto = True):
         if auto_offset: # offset is in drawing coordinates (not in canvas)
             offx = minx + (width - rect.width / scale) / 2
             offy = miny + (height - rect.height / scale) / 2
-           
-        command(ui, args, False)                
+        command(ui, rect, args, False)                
 
 
 if __name__ == "__main__":
@@ -206,7 +213,7 @@ if __name__ == "__main__":
                 canvas.set_attribute("width", str(wrect.width - GUI_MARGIN))
                 canvas.set_attribute("height", str(wrect.height - GUI_MARGIN))
                 canvas.erase()
-                command(ui, ['scale', 'auto', 'off', 'auto'] + params)
+                command(ui, wrect, ['scale', 'auto', 'off', 'auto'] + params)
 
         # works only with non-browser UI servers
         ui.root().subscribe("resize", lambda _: on_resize(), [], datetime.timedelta(milliseconds=500))
