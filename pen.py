@@ -4,6 +4,7 @@ import os
 import sys
 import math
 import datetime
+import time
 from Gempyre import resource
 
 GUI = '''
@@ -55,7 +56,7 @@ def command(ui, rect, args, enable_auto = True):
     miny = MAX
     maxy = -MAX
 
-    global offy, offx, scale
+    global offy, offx, scale, invx, invy
 
     is_fill = False
 
@@ -108,8 +109,10 @@ def command(ui, rect, args, enable_auto = True):
         nonlocal in_line
         end_path()
         fc.begin_path()
-        in_line = True          
-
+        in_line = True
+                  
+    canvas = Gempyre.CanvasElement(ui, "canvas")
+     
     try:
         while it:
             cmd = next(it) # change to match - case when applicable
@@ -168,13 +171,17 @@ def command(ui, rect, args, enable_auto = True):
                 invx = next(it)
             elif cmd == 'invy':
                 invy = next(it)
+            elif cmd == 'exit':
+                ui.after(int(next(it)), lambda: ui.exit())
+            elif cmd == 'info':
+                fc.fill_text(f"scale:{round(scale, 2)}, off:{round(offx, 2)}, {round(offy, 2)}", 0, 20)      
             elif cmd.isprintable() and cmd != ' ':
                 print("Not understood: '" + cmd + "'", file=sys.stderr)
     except (StopIteration):
         pass
     end_path()
 
-    canvas = Gempyre.CanvasElement(ui, "canvas")
+   
     if not (auto_scale and auto_offset):
        canvas.draw_frame(fc)
     else:
@@ -194,13 +201,24 @@ def command(ui, rect, args, enable_auto = True):
             offy = miny + (height - rect.height / scale) / 2
         command(ui, rect, args, False)                
 
+def as_file(name):
+    with open(name) as f:
+         return ' '.join((ln for ln in f.readlines() if ln[0] != '#')).replace('\n', '').rstrip().split()
 
 if __name__ == "__main__":
     def main():
         map, names = resource.from_bytes({"ui.html": bytes(GUI, 'utf-8')})
         ui = Gempyre.Ui(map, names["ui.html"])
         # read from arguments or stdin - stdin is tokenized.
-        params = sys.argv[1:] if len(sys.argv) > 1 else ' '.join((ln for ln in sys.stdin.readlines() if ln[0] != '#')).replace('\n', '').rstrip().split()
+        if len(sys.argv) > 1:
+            params = []
+            for p in  sys.argv[1:]:
+                if os.path.exists(p):
+                    params.extend(as_file(p))
+                else:
+                    params.append(p)            
+        else:    
+            params = ' '.join((ln for ln in sys.stdin.readlines() if ln[0] != '#')).replace('\n', '').rstrip().split()
 
         wrect = Gempyre.Rect(0, 0, 0 ,0)
         
