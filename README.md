@@ -46,7 +46,7 @@ Requires Gempyre-Python to be installed. (e.g. pip install gempyre)
 
 * info - shows scale and offset
 
-e.g.
+## Examples
 
 ```bash
 
@@ -77,7 +77,7 @@ $ poetry run python3 pen.py /tmp/doom_nav.txt
 $ poetry run python3 pen.py scale 1.2 off -856 2700 info /tmp/doom_nav.txt
 ```
 
-Example file
+### Example file
 
 ```
 text_align center
@@ -99,8 +99,33 @@ $ pen.py < lines.txt
 
 ```bash
 
-$ poetry run python3 ../pen.py < ~/lines/nav_line16.txt
+$ poetry run python3 pen.py < nav_line16.txt
 
 ```
+## Cool thing
 
+You can easily draw 3D using Isometric projection!
 
+Here is a simple C++ example how to produce isometric drawing from a 3D polygon.
+
+```cpp
+
+namespace Isometric {
+    std::string to_string(const Vertex3& v) {
+        const auto x = v.x - v.z;
+        const auto y = v.y - (v.x + v.z) / 2.;
+        return std::format("{} {}", x, y); 
+    }
+    std::string to_string(const std::vector<Vertex>& polygon) {
+        if (polygon.empty())
+            return {};
+        auto s = "move " + Isometric::to_string(polygon.front());    
+        for (const auto& v : std::span(std::next(polygon.begin()), polygon.end())) {
+           s += " ln " + Isometric::to_string(v);
+        }
+        s += " close";
+        return s;
+    }
+}
+
+```
