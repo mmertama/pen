@@ -1,0 +1,9 @@
+off -1 -1
+scale 100
+move 0 0 ln 4 0 ln 4 3 ln 2 5 ln 0 3 ln 0 0
+text "1" 0 0 
+text "2" 4 0
+text "3" 4 3
+text "4" 2 5
+text "5" 0 3
+text "CW" 2 2

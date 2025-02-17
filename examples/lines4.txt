@@ -1,0 +1,12 @@
+scale auto
+off auto
+text_align center
+text_baseline middle
+
+move 640 -576 ln 640 -336 ln 320 -336 ln 320 -448 ln 192 -576 ln 96 -576 ln -96 -576 ln -320 -576 ln -320 -448 ln -704 -304 ln -704 -464 ln -640 -704 ln -128 -760 ln 128 -760 ln 640 -704 ln 640 -576 ln 640 -576
+
+circle 5 -48 -608
+
+move -960 -1024 ln -960 -1256 ln -904 -1312 ln -440 -1312 ln -384 -1256 ln -384 -888 ln -440 -832 ln -768 -832 ln -832 -896 ln -960 -1024 ln -960 -1024
+
+circle 5 -919 -1085
