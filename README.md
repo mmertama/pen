@@ -27,6 +27,8 @@ Requires Gempyre-Python to be installed. (e.g. pip install gempyre)
   
 * color c - use a given color (HTML color name or HTML color format).
 
+* width w - line width.
+
 * close -  close current line to a polygon.
 
 * circle r x y - draw a circle.
@@ -45,6 +47,8 @@ Requires Gempyre-Python to be installed. (e.g. pip install gempyre)
 * exit s - exit after s seconds (floating point of)
 
 * info - shows scale and offset
+
+* sleep s - draws and wait s seconds before continue. Enables simple animations.
 
 ## Examples
 

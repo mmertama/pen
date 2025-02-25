@@ -1,0 +1,16 @@
+
+
+move 296 3262 ln 296 3202 ln 320 3208 ln 320 3208 ln 320 3256 ln 320 3256 ln 296 3262
+
+color red
+line 296 3262 296 3202 
+color green
+line 296 3202 320 3208 
+color blue
+line 320 3298 320 3298 
+color cyan
+line 320 3208 320 3256
+color magenta
+line 320 3256 320 3256
+color orange
+line 320 3256 296 3262

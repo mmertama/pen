@@ -39,9 +39,21 @@ offx = 0.
 scale = 1.
 invx = False
 invy = True
+sleeps = 0
 
-def command(ui, rect, args, enable_auto = True):
+def show_tail(args, it):
+    debug_it = iter(args)
+    tail = []
+    try:
+        while True:
+            v = next(debug_it)
+            if len(tail) > 30:
+                tail.pop(0)
+            tail.append(v)        
+    except StopIteration:
+        print(tail)    
 
+def command(ui, rect, args, enable_auto):
     fc = Gempyre.FrameComposer()
     it = iter(args)
 
@@ -56,7 +68,7 @@ def command(ui, rect, args, enable_auto = True):
     miny = MAX
     maxy = -MAX
 
-    global offy, offx, scale, invx, invy
+    global offy, offx, scale, invx, invy, sleeps
 
     is_fill = False
 
@@ -112,6 +124,8 @@ def command(ui, rect, args, enable_auto = True):
         in_line = True
                   
     canvas = Gempyre.CanvasElement(ui, "canvas")
+    
+    sleep_requests = 0 
      
     try:
         while it:
@@ -120,6 +134,8 @@ def command(ui, rect, args, enable_auto = True):
                 end_path()
                 is_fill = False
                 fc.stroke_style(next(it))
+            elif cmd == 'width':
+                fc.line_width(float(next(it)))    
             elif cmd == 'fill':
                 end_path()
                 is_fill = True
@@ -172,13 +188,27 @@ def command(ui, rect, args, enable_auto = True):
             elif cmd == 'invy':
                 invy = next(it)
             elif cmd == 'exit':
-                ui.after(int(next(it)), lambda: ui.exit())
+                exit_time = float(next(it))
+                ui.after(datetime.timedelta(seconds=exit_time), lambda: sys.exit())
+            elif cmd == 'sleep':
+                wait_time = float(next(it))
+                if enable_auto:
+                    continue
+                sleep_requests += 1
+                if sleep_requests > sleeps:
+                    sleeps += 1
+                    ui.after(datetime.timedelta(seconds=wait_time), lambda: command(ui, rect, args, False))    
+                    raise StopIteration
             elif cmd == 'info':
                 fc.fill_text(f"scale:{round(scale, 2)}, off:{round(offx, 2)}, {round(offy, 2)}", 0, 20)      
             elif cmd.isprintable() and cmd != ' ':
                 print("Not understood: '" + cmd + "'", file=sys.stderr)
-    except (StopIteration):
+    except StopIteration:
         pass
+    except ValueError as e:
+        print("Value error:", e)
+        show_tail(args, it)
+        sys.exit(1)
     end_path()
 
    
@@ -231,7 +261,7 @@ if __name__ == "__main__":
                 canvas.set_attribute("width", str(wrect.width - GUI_MARGIN))
                 canvas.set_attribute("height", str(wrect.height - GUI_MARGIN))
                 canvas.erase()
-                command(ui, wrect, ['scale', 'auto', 'off', 'auto'] + params)
+                command(ui, wrect, ['scale', 'auto', 'off', 'auto'] + params, True)
 
         # works only with non-browser UI servers
         ui.root().subscribe("resize", lambda _: on_resize(), [], datetime.timedelta(milliseconds=500))
@@ -240,6 +270,5 @@ if __name__ == "__main__":
             on_resize()
 
         ui.on_open(on_open)
-
         ui.run()
     main()    
