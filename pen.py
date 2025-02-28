@@ -14,6 +14,14 @@ GUI = '''
         <meta charset="utf-8">
         <title>Pen</title>
         <style>
+        div.note {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 9999;
+            background-color: yellow;
+            padding: 5px;
+            }
         body { 
             display: flex; 
             justify-content: center; /* Center horizontally */ 
@@ -26,6 +34,7 @@ GUI = '''
     <body>
         <script type="text/javascript" src="gempyre.js"></script>
         <canvas id="canvas" width="1280" height="1024"></canvas>
+        <div class="note" id="info"></div>
     </body>
 </html>
 '''
@@ -41,17 +50,41 @@ invx = False
 invy = True
 sleeps = 0
 
-def show_tail(args, it):
-    debug_it = iter(args)
-    tail = []
+def get_rest(it):
+    p = 0
     try:
         while True:
-            v = next(debug_it)
-            if len(tail) > 30:
-                tail.pop(0)
-            tail.append(v)        
+            next(it)
+            p += 1
     except StopIteration:
-        print(tail)    
+        pass
+    return p        
+        
+
+def get_pos(args, it):
+    tail_len = get_rest(it)
+    pos = len(args) - tail_len
+    print("poos", pos)
+    # restore
+    new_it = iter(args)
+    for _ in range(pos):
+        next(new_it)
+    return pos, new_it    
+
+def tail(args, pos, tail_len = 20):
+    debug_it = iter(args)
+    tail = args[:tail_len]
+    debug_pos = 0
+    try:
+        while debug_pos < pos:
+            debug_pos += 1
+            v = next(debug_it)
+            if debug_pos > tail_len:
+                tail.pop(0)
+                tail.append(v)        
+    except StopIteration:
+        pass
+    return ' '.join(tail)    
 
 def command(ui, rect, args, enable_auto):
     fc = Gempyre.FrameComposer()
@@ -125,7 +158,7 @@ def command(ui, rect, args, enable_auto):
                   
     canvas = Gempyre.CanvasElement(ui, "canvas")
     
-    sleep_requests = 0 
+    sleep_requests = 0
      
     try:
         while it:
@@ -200,14 +233,15 @@ def command(ui, rect, args, enable_auto):
                     ui.after(datetime.timedelta(seconds=wait_time), lambda: command(ui, rect, args, False))    
                     raise StopIteration
             elif cmd == 'info':
-                fc.fill_text(f"scale:{round(scale, 2)}, off:{round(offx, 2)}, {round(offy, 2)}", 0, 20)      
+                Gempyre.Element(ui, 'info').set_html(f"scale {round(scale, 2)}  offset {round(offx, 2)} {round(offy, 2)}")      
             elif cmd.isprintable() and cmd != ' ':
-                print("Not understood: '" + cmd + "'", file=sys.stderr)
+                pos, it = get_pos(args, it)
+                print(f"Not understood: '{cmd}' after: '{tail(args, pos, 5)}'", file=sys.stderr)
     except StopIteration:
         pass
     except ValueError as e:
-        print("Value error:", e)
-        show_tail(args, it)
+        pos, it = get_pos(args, it)
+        print(f"Value error:: '{e}' after: '{tail(args, pos, 5)}'", file=sys.stderr)
         sys.exit(1)
     end_path()
 
