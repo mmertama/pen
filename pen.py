@@ -48,7 +48,7 @@ offx = 0.
 scale = 1.
 invx = False
 invy = True
-sleeps = 0
+
 
 def get_rest(it):
     p = 0
@@ -64,7 +64,6 @@ def get_rest(it):
 def get_pos(args, it):
     tail_len = get_rest(it)
     pos = len(args) - tail_len
-    print("poos", pos)
     # restore
     new_it = iter(args)
     for _ in range(pos):
@@ -86,7 +85,7 @@ def tail(args, pos, tail_len = 20):
         pass
     return ' '.join(tail)    
 
-def command(ui, rect, args, enable_auto):
+def command(ui, rect, args, enable_auto, from_pos = 0):
     fc = Gempyre.FrameComposer()
     it = iter(args)
 
@@ -101,7 +100,7 @@ def command(ui, rect, args, enable_auto):
     miny = MAX
     maxy = -MAX
 
-    global offy, offx, scale, invx, invy, sleeps
+    global offy, offx, scale, invx, invy
 
     is_fill = False
 
@@ -157,10 +156,10 @@ def command(ui, rect, args, enable_auto):
         in_line = True
                   
     canvas = Gempyre.CanvasElement(ui, "canvas")
-    
-    sleep_requests = 0
      
     try:
+        for _ in range(from_pos):
+            next(it) # consume
         while it:
             cmd = next(it) # change to match - case when applicable
             if cmd == 'color':
@@ -227,13 +226,11 @@ def command(ui, rect, args, enable_auto):
                 wait_time = float(next(it))
                 if enable_auto:
                     continue
-                sleep_requests += 1
-                if sleep_requests > sleeps:
-                    sleeps += 1
-                    ui.after(datetime.timedelta(seconds=wait_time), lambda: command(ui, rect, args, False))    
-                    raise StopIteration
+                new_pos, _ = get_pos(args, it)
+                ui.after(datetime.timedelta(seconds=wait_time), lambda: command(ui, rect, args, False, new_pos))    
+                raise StopIteration
             elif cmd == 'info':
-                Gempyre.Element(ui, 'info').set_html(f"scale {round(scale, 2)}  offset {round(offx, 2)} {round(offy, 2)}")      
+                Gempyre.Element(ui, 'info').set_html(f"scale {round(scale, 2)} off {round(offx, 2)} {round(offy, 2)}")      
             elif cmd.isprintable() and cmd != ' ':
                 pos, it = get_pos(args, it)
                 print(f"Not understood: '{cmd}' after: '{tail(args, pos, 5)}'", file=sys.stderr)
@@ -244,7 +241,6 @@ def command(ui, rect, args, enable_auto):
         print(f"Value error:: '{e}' after: '{tail(args, pos, 5)}'", file=sys.stderr)
         sys.exit(1)
     end_path()
-
    
     if not (auto_scale and auto_offset):
        canvas.draw_frame(fc)
