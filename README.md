@@ -1,6 +1,6 @@
 # pen
 
-Draw simple from command line or from file.
+Draw from command line or from file.
 
 This application has been implemented to help generate visualization from debug
 printouts. Sometimes there are just too much information to see what numbers mean, and
@@ -49,6 +49,15 @@ Requires Gempyre-Python to be installed. (e.g. pip install gempyre)
 * info - shows scale and offset
 
 * sleep s - draws and wait s seconds before continue. Enables simple animations.
+
+
+# GUI
+
+* Mouse click moves image towards mouse point
+* 'Q' - Zoom in
+* 'W' - Zoom out
+
+When using GUI commands its advisable not provide 'scale' or 'off' commands. 
 
 ## Examples
 
@@ -133,3 +142,5 @@ namespace Isometric {
 }
 
 ```
+
+#### Copyright Markus Mertama 2025

@@ -267,6 +267,7 @@ def as_file(name):
 
 if __name__ == "__main__":
     def main():
+        last_mouse = None
         map, names = resource.from_bytes({"ui.html": bytes(GUI, 'utf-8')})
         ui = Gempyre.Ui(map, names["ui.html"])
         # read from arguments or stdin - stdin is tokenized.
@@ -293,9 +294,35 @@ if __name__ == "__main__":
                 canvas.erase()
                 command(ui, wrect, ['scale', 'auto', 'off', 'auto'] + params, True)
 
+        def on_mouse_move(p):
+            nonlocal last_mouse
+            last_mouse = (float(p.properties['clientX']), float(p.properties['clientY']))
+            
+        def on_key(p):
+            key = p.properties['key']
+            if key.upper() == 'Q':
+                Gempyre.CanvasElement(ui, "canvas").erase()
+                command(ui, wrect,['scale', str(scale * 1.2), 'off', str(offx), str(offy)] + params, True)
+            if key.upper() == 'W':
+                Gempyre.CanvasElement(ui, "canvas").erase()
+                command(ui, wrect,['scale', str(scale * 0.9), 'off', str(offx), str(offy)] + params, True)    
+        
+        def on_mouse_click(p):
+            on_mouse_move(p)
+            dx = (last_mouse[0] - (wrect.x + wrect.width / 2)) / scale
+            dy = (last_mouse[1] - (wrect.y + wrect.height / 2)) / scale
+            #print(dx, dy, wrect.x, wrect.y, wrect.width, wrect.height)
+            Gempyre.CanvasElement(ui, "canvas").erase()
+            command(ui, wrect,['scale', str(scale), 'off', str(offx - dx), str(offy + dy)] + params, True)
+                    
+
         # works only with non-browser UI servers
         ui.root().subscribe("resize", lambda _: on_resize(), [], datetime.timedelta(milliseconds=500))
-
+        
+        ui.root().subscribe("mousemove", on_mouse_move, ['clientX', 'clientY'], datetime.timedelta(milliseconds=100))
+        ui.root().subscribe("keyup", on_key, ['key'])
+        ui.root().subscribe("click", on_mouse_click, ['clientX', 'clientY'])
+        
         def on_open():
             on_resize()
 
