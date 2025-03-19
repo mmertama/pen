@@ -171,7 +171,9 @@ def command(ui, rect, args, enable_auto, from_pos = 0):
             elif cmd == 'fill':
                 end_path()
                 is_fill = True
-                fc.fill_style(next(it))    
+                fc.fill_style(next(it))
+            elif cmd == 'erase':
+                canvas.erase()        
             elif cmd == 'off':
                 param = next(it)
                 if param == 'auto':
