@@ -85,6 +85,7 @@ def tail(args, pos, tail_len = 20):
         pass
     return ' '.join(tail)    
 
+## this function has get too big - make as class!
 def command(ui, rect, args, enable_auto, from_pos = 0):
     fc = Gempyre.FrameComposer()
     it = iter(args)
@@ -198,12 +199,29 @@ def command(ui, rect, args, enable_auto, from_pos = 0):
                 begin_path()
                 radius = float(next(it))
                 fc.ellipse(posx(next(it)), posy(next(it)), radius, radius, math.pi * 2, 0, math.pi * 2)  
+            elif cmd == 'rect':
+                 begin_path()
+                 tlx = posx(next(it))
+                 tly = posx(next(it))
+                 fc.rect(Gempyre.Rect(tlx, tly, posx(next(it) - tlx, posy(next(it)) - tly)))  
             elif cmd == 'close':
                 if in_line:
                     fc.close_path()
                 end_path()
             elif cmd == 'ln':
                 fc.line_to(posx(next(it)), posy(next(it)))
+            elif cmd == 'polyline':
+                begin_path()
+                fc.move_to(posx(next(it)), posy(next(it)))
+                while True:
+                    nxt = next(it)
+                    if not nxt or nxt == 'end':
+                        break
+                    if nxt == 'close':
+                        fc.close_path()
+                        break
+                    fc.line_to(posx(nxt), posy(next(it)))  
+                end_path()    
             elif cmd == 'text':
                 if text_style == 'fill':
                     fc.fill_text(read_text(), posx(next(it)), posy(next(it)))   
@@ -249,10 +267,12 @@ def command(ui, rect, args, enable_auto, from_pos = 0):
     else:
         width = maxx - minx
         height = maxy - miny
-        assert width > 0
-        assert height > 0
-        if width == 0 or height == 0:
-            return
+        if width <= 0:
+            print(f"Width too small", file=sys.stderr)
+            width = 10
+        if height <= 0:
+            print(f"Height too small", file=sys.stderr)
+            height = 10
         rect = canvas.rect()
         rect.width -= GUI_MARGIN
         rect.height -= GUI_MARGIN
