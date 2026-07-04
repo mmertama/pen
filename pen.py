@@ -104,6 +104,8 @@ def command(ui, rect, args, enable_auto, from_pos = 0):
     global offy, offx, scale, invx, invy
 
     is_fill = False
+    is_vertex = False
+    vertices = []
 
     def posx(x):
         global offx, scale, invx
@@ -126,12 +128,23 @@ def command(ui, rect, args, enable_auto, from_pos = 0):
     def end_path():
         nonlocal in_line
         nonlocal is_fill
+        nonlocal is_vertex
+        nonlocal vertices
         if in_line:
             if is_fill:
                 fc.fill()
             else:    
                 fc.stroke()
             in_line = False
+        if len(vertices) > 0:
+            #fc.save();        # Save current canvas state
+            for x, y in vertices:
+                fc.begin_path()
+                fc.ellipse( x, y, 5, 5, math.pi * 2, 0, math.pi * 2)
+                fc.stroke()
+            #fc.restore()
+            vertices = []  
+ 
 
     def read_text():
         nonlocal it
@@ -141,7 +154,7 @@ def command(ui, rect, args, enable_auto, from_pos = 0):
         elif text[0] == "'":
             start = "'"
         else:
-            raise Exception('Not a string:' + text)
+            raise ValueError('Not a string:' + text)
         text = text[1:]
        
         while not (text[-1] == start and (len(text) == 1 or text[-2] != '\\')): 
@@ -155,6 +168,7 @@ def command(ui, rect, args, enable_auto, from_pos = 0):
         end_path()
         fc.begin_path()
         in_line = True
+        
                   
     canvas = Gempyre.CanvasElement(ui, "canvas")
      
@@ -190,7 +204,11 @@ def command(ui, rect, args, enable_auto, from_pos = 0):
                     scale = float(param)
             elif cmd == 'move':
                 begin_path()
-                fc.move_to(posx(next(it)), posy(next(it)))    
+                x = posx(next(it))
+                y = posy(next(it))
+                fc.move_to( x, y )
+                if is_vertex:
+                   vertices.append( ( x, y ) )
             elif cmd == 'line':
                 begin_path()
                 fc.move_to(posx(next(it)), posy(next(it)))
@@ -209,7 +227,11 @@ def command(ui, rect, args, enable_auto, from_pos = 0):
                     fc.close_path()
                 end_path()
             elif cmd == 'ln':
-                fc.line_to(posx(next(it)), posy(next(it)))
+                x = posx(next(it))
+                y = posy(next(it))
+                fc.line_to(x, y)
+                if is_vertex:
+                    vertices.append( ( x, y ) )
             elif cmd == 'polyline':
                 begin_path()
                 fc.move_to(posx(next(it)), posy(next(it)))
@@ -251,6 +273,11 @@ def command(ui, rect, args, enable_auto, from_pos = 0):
                 raise StopIteration
             elif cmd == 'info':
                 Gempyre.Element(ui, 'info').set_html(f"scale {round(scale, 2)} off {round(offx, 2)} {round(offy, 2)}")      
+            elif cmd == 'vertex':
+                is_vertex_param = next(it)
+                if is_vertex_param not in [ 'yes', 'no', 'true', 'false', 'on', 'off' ]:
+                    raise ValueError("Not a boolean")
+                is_vertex = is_vertex_param in [ 'yes', 'true', 'on' ]
             elif cmd.isprintable() and cmd != ' ':
                 pos, it = get_pos(args, it)
                 print(f"Not understood: '{cmd}' after: '{tail(args, pos, 5)}'", file=sys.stderr)

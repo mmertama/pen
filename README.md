@@ -6,8 +6,13 @@ This application has been implemented to help generate visualization from debug
 printouts. Sometimes there are just too much information to see what numbers mean, and
 then visualization may help to see the big picture.
 
-
 Requires Gempyre-Python to be installed. (e.g. pip install gempyre) 
+
+## TLDR;
+
+```bash
+poetry run python3 pen.py line -1938 2074 -1952 2116 color "green" line -1968 2072 -1904 2072
+```
 
 ## Commands
 
@@ -52,6 +57,7 @@ Requires Gempyre-Python to be installed. (e.g. pip install gempyre)
 
 * sleep s - draws and wait s seconds before continue. Enables simple animations.
 
+* vertex on/off - draw a polygon vertices when constructed with a move, ln(s) and a close 
 
 # GUI
 
@@ -114,7 +120,7 @@ $ pen.py < lines.txt
 
 ```bash
 
-$ poetry run python3 pen.py < nav_line16.txt
+$ poetry run python3 pen.py nav_line16.txt
 
 ```
 ## Cool thing
