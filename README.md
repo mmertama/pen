@@ -36,7 +36,7 @@ poetry run python3 pen.py line -1938 2074 -1952 2116 color "green" line -1968 20
 
 * width w - line width.
 
-* close -  close current line to a polygon.
+* close - close current line to a polygon.
 
 * circle r x y - draw a circle.
 

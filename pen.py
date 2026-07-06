@@ -4,7 +4,8 @@ import os
 import sys
 import math
 import datetime
-import time
+import inspect
+import re
 from Gempyre import resource
 
 GUI = '''
@@ -106,6 +107,13 @@ def command(ui, rect, args, enable_auto, from_pos = 0):
     is_fill = False
     is_vertex = False
     vertices = []
+    
+    def boolean(value) -> bool:
+        FALSE = [ 'no', 'false', 'off', '0' ]
+        TRUE = [ 'yes', 'true', 'false', 'on', '1' ]
+        if value.lower() not in [ x for x in FALSE + TRUE]:
+            raise ValueError("Not a boolean")
+        return value in TRUE
 
     def posx(x):
         global offx, scale, invx
@@ -123,6 +131,7 @@ def command(ui, rect, args, enable_auto, from_pos = 0):
         miny = min(miny, v)
         maxy = max(maxy, v)
         screeny = (v - offy) * scale
+        print("invvy", invy)
         return rect.height - screeny if invy else screeny      
 
     def end_path():
@@ -177,110 +186,135 @@ def command(ui, rect, args, enable_auto, from_pos = 0):
             next(it) # consume
         while it:
             cmd = next(it) # change to match - case when applicable
-            if cmd == 'color':
-                end_path()
-                is_fill = False
-                fc.stroke_style(next(it))
-            elif cmd == 'width':
-                fc.line_width(float(next(it)))    
-            elif cmd == 'fill':
-                end_path()
-                is_fill = True
-                fc.fill_style(next(it))
-            elif cmd == 'erase':
-                canvas.erase()        
-            elif cmd == 'off':
-                param = next(it)
-                if param == 'auto':
-                    auto_offset = enable_auto
-                else: 
-                    offx = float(param)
-                    offy = float(next(it))
-            elif cmd == 'scale':
-                param = next(it)
-                if param == 'auto':
-                    auto_scale = enable_auto
-                else:  
-                    scale = float(param)
-            elif cmd == 'move':
-                begin_path()
-                x = posx(next(it))
-                y = posy(next(it))
-                fc.move_to( x, y )
-                if is_vertex:
-                   vertices.append( ( x, y ) )
-            elif cmd == 'line':
-                begin_path()
-                fc.move_to(posx(next(it)), posy(next(it)))
-                fc.line_to(posx(next(it)), posy(next(it)))
-            elif cmd == 'circle':
-                begin_path()
-                radius = float(next(it))
-                fc.ellipse(posx(next(it)), posy(next(it)), radius, radius, math.pi * 2, 0, math.pi * 2)  
-            elif cmd == 'rect':
-                 begin_path()
-                 tlx = posx(next(it))
-                 tly = posx(next(it))
-                 fc.rect(Gempyre.Rect(tlx, tly, posx(next(it) - tlx, posy(next(it)) - tly)))  
-            elif cmd == 'close':
-                if in_line:
-                    fc.close_path()
-                end_path()
-            elif cmd == 'ln':
-                x = posx(next(it))
-                y = posy(next(it))
-                fc.line_to(x, y)
-                if is_vertex:
-                    vertices.append( ( x, y ) )
-            elif cmd == 'polyline':
-                begin_path()
-                fc.move_to(posx(next(it)), posy(next(it)))
-                while True:
-                    nxt = next(it)
-                    if not nxt or nxt == 'end':
-                        break
-                    if nxt == 'close':
+            match cmd:
+                case 'color':
+                    ## c - use a given color (HTML color name or HTML color format).
+                    end_path()
+                    is_fill = False
+                    fc.stroke_style(next(it))
+                case 'width':
+                    ## w - line width.
+                    fc.line_width(float(next(it)))    
+                case 'fill':
+                    ## c - the polygons are filles with the color until 'color' is called. 
+                    end_path()
+                    is_fill = True
+                    fc.fill_style(next(it))
+                case 'erase':
+                    ## Erase off drawings
+                    canvas.erase()        
+                case 'off':
+                    ## * x y - set offset of following coordinates. 
+                    ## * auto - automatically centers graphics. (auto is default - so normally you not need to provide offset )
+                    param = next(it)
+                    if param == 'auto':
+                        auto_offset = enable_auto
+                    else: 
+                        offx = float(param)
+                        offy = float(next(it))
+                case 'scale':
+                    ##  * s - scales drawing with a given factor. Default is 1.0.
+                    ## * auto - scales drawing automatically. (auto is default - so normally you may not need provide scale)
+                    param = next(it)
+                    if param == 'auto':
+                        auto_scale = enable_auto
+                    else:  
+                        scale = float(param)
+                case 'move':
+                    ##  x y - move a line start position. I.e. 'line x1 y1 x2 y2' and 'move x1 y1 ln x2 y2' are equal expressions. 
+                    begin_path()
+                    x = posx(next(it))
+                    y = posy(next(it))
+                    fc.move_to( x, y )
+                    if is_vertex:
+                        vertices.append( ( x, y ) )
+                case 'line':
+                    ## x1 y1 x2 y2 - draw a line.
+                    begin_path()
+                    fc.move_to(posx(next(it)), posy(next(it)))
+                    fc.line_to(posx(next(it)), posy(next(it)))
+                case 'circle':
+                    ## r x y - draw a circle.
+                    begin_path()
+                    radius = float(next(it))
+                    fc.ellipse(posx(next(it)), posy(next(it)), radius, radius, math.pi * 2, 0, math.pi * 2)  
+                case 'rect':
+                    ## Draw a rect x1 y1 x2 y2 
+                    begin_path()
+                    tlx = posx(next(it))
+                    tly = posx(next(it))
+                    fc.rect(Gempyre.Rect(tlx, tly, posx(next(it) - tlx, posy(next(it)) - tly)))  
+                case 'close':
+                    ## close current line to a polygon.
+                    if in_line:
                         fc.close_path()
-                        break
-                    fc.line_to(posx(nxt), posy(next(it)))  
-                end_path()    
-            elif cmd == 'text':
-                if text_style == 'fill':
-                    fc.fill_text(read_text(), posx(next(it)), posy(next(it)))   
-                elif text_style == 'stroke':
-                    fc.stroke_text(read_text(), posx(next(it)), posy(next(it)))
-            elif cmd == 'font':
-                fc.font(next(it))
-            elif cmd == 'text_align':
-                fc.text_align(next(it))
-            elif cmd == 'text_baseline':
-                fc.text_baseline(next(it))             
-            elif cmd == 'text_style':
-                text_style = next(it) 
-            elif cmd == 'invx':
-                invx = next(it)
-            elif cmd == 'invy':
-                invy = next(it)
-            elif cmd == 'exit':
-                exit_time = float(next(it))
-                ui.after(datetime.timedelta(seconds=exit_time), lambda: sys.exit())
-            elif cmd == 'sleep':
-                wait_time = float(next(it))
-                if enable_auto:
-                    continue
-                new_pos, _ = get_pos(args, it)
-                ui.after(datetime.timedelta(seconds=wait_time), lambda: command(ui, rect, args, False, new_pos))    
-                raise StopIteration
-            elif cmd == 'info':
-                Gempyre.Element(ui, 'info').set_html(f"scale {round(scale, 2)} off {round(offx, 2)} {round(offy, 2)}")      
-            elif cmd == 'vertex':
-                is_vertex_param = next(it)
-                if is_vertex_param not in [ 'yes', 'no', 'true', 'false', 'on', 'off' ]:
-                    raise ValueError("Not a boolean")
-                is_vertex = is_vertex_param in [ 'yes', 'true', 'on' ]
-            elif cmd.isprintable() and cmd != ' ':
-                pos, it = get_pos(args, it)
-                print(f"Not understood: '{cmd}' after: '{tail(args, pos, 5)}'", file=sys.stderr)
+                    end_path()
+                case 'ln':
+                    ## x y  - draw a joint line from a previous line position.
+                    x = posx(next(it))
+                    y = posy(next(it))
+                    fc.line_to(x, y)
+                    if is_vertex:
+                        vertices.append( ( x, y ) )
+                case 'polyline':
+                    begin_path()
+                    fc.move_to(posx(next(it)), posy(next(it)))
+                    while True:
+                        nxt = next(it)
+                        if not nxt or nxt == 'end':
+                            break
+                        if nxt == 'close':
+                            fc.close_path()
+                            break
+                        fc.line_to(posx(nxt), posy(next(it)))  
+                    end_path()    
+                case 'text':
+                    ## "some text" x y - Double or quote text is written on position x y
+                    if text_style == 'fill':
+                        fc.fill_text(read_text(), posx(next(it)), posy(next(it)))   
+                    elif text_style == 'stroke':
+                        fc.stroke_text(read_text(), posx(next(it)), posy(next(it)))
+                case 'font':
+                    ## font_name - apply a given font name
+                    fc.font(next(it))
+                case 'text_align':
+                    ##  see: https://www.w3schools.com/graphics/canvas_text_alignment.asp#:~:text=To%20align%20text%20in%20the,the%20horizontal%20alignment%20of%20text
+                    fc.text_align(next(it))
+                case 'text_baseline':
+                    ##  see: https://www.w3schools.com/tags/canvas_textbaseline.asp
+                    fc.text_baseline(next(it))             
+                case 'text_style':
+                    ## * fill - text is filled (default)
+                    ## * stroke - text is stoked
+                    text_style = next(it) 
+                case 'invx':
+                    ## mirror
+                    invx = boolean(next(it))
+                case 'invy':
+                    ## flip
+                    invy = boolean(next(it))
+                case 'exit':
+                    ## s - exit after s seconds (floating point of)
+                    exit_time = float(next(it))
+                    ui.after(datetime.timedelta(seconds=exit_time), lambda: sys.exit())
+                case 'sleep':
+                    ##  s - draws and wait s seconds before continue. Enables simple animations.
+                    wait_time = float(next(it))
+                    if enable_auto:
+                        continue
+                    new_pos, _ = get_pos(args, it)
+                    ui.after(datetime.timedelta(seconds=wait_time), lambda: command(ui, rect, args, False, new_pos))    
+                    raise StopIteration
+                case 'info':
+                    ## info - shows scale and offset
+                    Gempyre.Element(ui, 'info').set_html(f"scale {round(scale, 2)} off {round(offx, 2)} {round(offy, 2)}")      
+                case 'vertex':
+                    ## on/off - draw a polygon vertices when constructed with a move, ln(s) and a close 
+                    is_vertex = boolean( next(it) )
+                case _:
+                    if cmd.isprintable() and cmd != ' ':
+                        pos, it = get_pos(args, it)
+                        print(f"Not understood: '{cmd}' after: '{tail(args, pos, 5)}'", file=sys.stderr)
     except StopIteration:
         pass
     except ValueError as e:
@@ -314,6 +348,28 @@ def as_file(name):
     with open(name) as f:
          return ' '.join((ln for ln in f.readlines() if ln[0] != '#')).replace('\n', '').rstrip().split()
 
+def print_help():
+    print("Draw from command line or from file.")   
+    src = inspect.getsource(command)
+    cmd = False
+    has_doc = False
+    for ln in src.split('\n'):
+        if cmd:
+            m = re.match(r'\s*##\s*(.*)', ln )
+            if m:
+                print( '\t', m[1])
+                has_doc = True
+            else: 
+                if not has_doc: 
+                    print( '\t', 'Undocumented')
+                cmd = False
+                has_doc = False    
+        m = re.match(r'\s+case .([a-z_0-9]+).:', ln)
+        if m:
+            cmd = m[1]
+            print(cmd)
+    sys.exit()
+
 if __name__ == "__main__":
     def main():
         last_mouse = None
@@ -321,6 +377,8 @@ if __name__ == "__main__":
         ui = Gempyre.Ui(map, names["ui.html"])
         # read from arguments or stdin - stdin is tokenized.
         if len(sys.argv) > 1:
+            if sys.argv[1] == '--help' or sys.argv[1] == '-h' or sys.argv[1] == '?':
+                print_help()
             params = []
             for p in  sys.argv[1:]:
                 if os.path.exists(p):
